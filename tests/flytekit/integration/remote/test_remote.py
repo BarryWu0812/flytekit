@@ -96,11 +96,13 @@ def run(file_name, wf_name, *args) -> str:
         capture_output=True,  # Capture the output streams
         text=True,  # Return outputs as strings (not bytes)
     )
+    # print("out: ", out)
     assert out.returncode == 0, (f"Command failed with return code {out.returncode}.\n"
                                  f"Standard Output: {out.stdout}\n"
                                  f"Standard Error: {out.stderr}\n")
 
     match = re.search(r'executions/([a-zA-Z0-9]+)', out.stdout)
+    # print("matchs ", match)
     if match:
         execution_id = match.group(1)
         return execution_id
@@ -987,10 +989,14 @@ def test_attr_access_sd():
     # Upload a file to minio s3 bucket
     file_transfer = SimpleFileTransfer()
     remote_file_path = file_transfer.upload_file(file_type="parquet")
-
+    # print("remote_file_path: ", remote_file_path)
+    # breakpoint()
     execution_id = run("attr_access_sd.py", "wf", "--uri", remote_file_path)
+    print("execution_id: ", execution_id)
     remote = FlyteRemote(Config.auto(config_file=CONFIG), PROJECT, DOMAIN)
+    # print("remote: ", remote)
     execution = remote.fetch_execution(name=execution_id)
+    # print("execution: ", execution)
     execution = remote.wait(execution=execution, timeout=datetime.timedelta(minutes=15))
     assert execution.error is None, f"Execution failed with error: {execution.error}"
     assert execution.closure.phase == WorkflowExecutionPhase.SUCCEEDED, f"Execution failed with phase: {execution.closure.phase}"

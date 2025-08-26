@@ -2470,13 +2470,19 @@ class FlyteRemote(object):
         if timeout is not None and not isinstance(timeout, timedelta):
             timeout = timedelta(seconds=timeout)
         time_to_give_up = datetime.max if timeout is None else datetime.now() + timeout
-
+        print("time_to_give_up: ", time_to_give_up)
+        print("datetime.now(): ", datetime.now())
+        print("poll_interval: ", poll_interval)
         while datetime.now() < time_to_give_up:
             execution = self.sync_execution(execution, sync_nodes=sync_nodes)
             if execution.is_done:
                 return execution
             time.sleep(poll_interval.total_seconds())
-
+        print("failed datetime.now(): ", datetime.now())
+        print("Last chance to sync: ", datetime.now())
+        execution = self.sync_execution(execution, sync_nodes=sync_nodes)
+        if execution.is_done:
+            return execution
         raise user_exceptions.FlyteTimeout(f"Execution {self} did not complete before timeout.")
 
     ########################
@@ -2518,7 +2524,12 @@ class FlyteRemote(object):
 
         # Update closure, and then data, because we don't want the execution to finish between when we get the data,
         # and then for the closure to have is_done to be true.
+        print(f"Before update - closure.phase: {execution.closure.phase}")
+        print(f"Before update - is_done: {execution.is_done}")
         execution._closure = self.client.get_execution(execution.id).closure
+        print(f"After update - closure.phase: {execution.closure.phase}")
+        print(f"After update - is_done: {execution.is_done}")
+        print("sync datetime.now(): ", datetime.now())
         execution_data = self.client.get_execution_data(execution.id)
         lp_id = execution.spec.launch_plan
         underlying_node_executions = []
