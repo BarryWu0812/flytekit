@@ -5,9 +5,7 @@ name: Build
 on:
   push:
     branches:
-      - master
-      - 'release-v**'
-      - 'test'
+      - '**'
   pull_request:
   schedule:
     - cron: "0 13 * * *" # This schedule runs at 1pm UTC every day
